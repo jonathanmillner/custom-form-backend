@@ -5,6 +5,7 @@ import { Form } from '@prisma/client'
 import prisma from '../db/db_client'
 import { serializer } from './middleware/pre_serializer'
 import { IEntityId } from './schemas/common'
+import { FormBody, FormBodySchema } from '../types/form'
 import { ApiError } from '../errors'
 
 async function formRoutes(app: FastifyInstance) {
@@ -33,19 +34,27 @@ async function formRoutes(app: FastifyInstance) {
 
   // Create a form
   app.post<{
-    Body: { name: string; fields: any }
+    Body: FormBody
     Reply: Form
-  }>('/', async (req, reply) => {
-    const { name, fields } = req.body
-    try {
-      const form = await prisma.form.create({
-        data: { name, fields },
-      })
-      reply.code(201).send(form)
-    } catch (err: any) {
-      throw new ApiError('Failed to create form', 400)
+  }>(
+    '/',
+    {
+      schema: {
+        body: FormBodySchema,
+      },
+    },
+    async (req, reply) => {
+      const { name, fields } = req.body
+      try {
+        const form = await prisma.form.create({
+          data: { name, fields },
+        })
+        reply.code(201).send(form)
+      } catch (err: any) {
+        throw new ApiError('Failed to create form', 400)
+      }
     }
-  })
+  )
 }
 
 export default formRoutes
